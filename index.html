@@ -40,6 +40,288 @@ const INIT_EXPENSES = [
   {id:3,label:"PageFly/GemPages",amount:29,category:"tools"},
 ];
 
+const TEMPLATE_NOTES = [
+  {
+    id:1, date: new Date().toLocaleDateString(), product:"All", category:"Swipe File",
+    title:"Swipe File — How To Use",
+    content:`HOW TO USE THIS FOLDER
+=======================
+Paste everything you find from spy research here.
+
+For each ad you save include:
+- Platform (FB, TikTok)
+- How long it has been running (longer = profitable)
+- Hook used in first 3 seconds
+- Format (video, image, carousel)
+- Angle used (pain, curiosity, social proof)
+- Link to the ad if possible
+- Notes on why you think it works
+
+TOOLS TO USE:
+- Minea
+- AdSpy
+- BigSpy
+- Facebook Ad Library (free)
+- TikTok Creative Center (free)
+
+WHAT TO LOOK FOR:
+- Ads running 2+ weeks = likely profitable
+- Hooks that repeat across multiple ads = proven angle
+- Comment sections showing buyer intent`
+  },
+  {
+    id:2, date: new Date().toLocaleDateString(), product:"All", category:"Angles & Pain Points",
+    title:"Angles & Pain Points — How To Use",
+    content:`HOW TO USE THIS FOLDER
+=======================
+For each product store your angle research here.
+
+ANGLE FRAMEWORK:
+Every strong angle needs 3 things:
+1. A real population or authority (credibility)
+2. A curiosity gap (why do they live longer / stay pain free)
+3. A specific compound or mechanism that bridges to your product
+
+PROVEN ANGLE TYPES:
+- Pain/Problem — "Waking up every morning with stiff aching joints..."
+- Curiosity — "Why chiropractors don't want you to know about this"
+- Transformation — "I went from barely walking to hiking again in 3 weeks"
+- Social Proof — "40,000 joint pain sufferers swear by this"
+- Enemy — "Why painkillers are making your joint pain worse"
+- Authority — Blue Zones, NASA, Harvard, Nobel Prize, Mediterranean Diet
+
+BLUE ZONE ANGLES WE IDENTIFIED:
+- Blue Zones (Okinawa, Sardinia, etc)
+- NASA/Military Research
+- Mediterranean Diet
+- Traditional Chinese Medicine
+- Nobel Prize research
+- Hunza Valley
+- Harvard Longevity Lab
+- Sardinian Shepherd
+- Cold Water/Scandinavian
+- Ancestral Diet
+
+FOR EACH PRODUCT ADD:
+- Avatar (age, gender, lifestyle)
+- Top 3 pain points
+- Enemy (what has failed them)
+- Transformation (what they want)
+- Best angle and why`
+  },
+  {
+    id:3, date: new Date().toLocaleDateString(), product:"All", category:"Ad Copy & Scripts",
+    title:"Ad Copy & Scripts — How To Use",
+    content:`HOW TO USE THIS FOLDER
+=======================
+Store all your ad hooks, scripts and copy here per product.
+
+CREATIVE TESTING SYSTEM:
+- Test 3 creatives per ad set max (on $1000 budget)
+- Each creative = different hook/angle
+- Rotate in batches of 3, kill losers, keep winners
+- Never pull a winning ad — only replace losers
+
+HOOK FORMULA:
+Hook = Pain/Curiosity + Avatar + Specificity
+Example: "If you wake up every morning with stiff aching joints, watch this"
+
+FOR EACH AD INCLUDE:
+- Hook (first 3 seconds)
+- Body (problem agitation)
+- CTA (what to do next)
+- Format (video/image/carousel)
+- Angle it uses
+- Product it belongs to
+
+VIDEO AD STRUCTURE (30-60 sec):
+0-3 sec: Hook — grab attention
+3-15 sec: Agitate the problem
+15-40 sec: Introduce mechanism/solution
+40-55 sec: Social proof
+55-60 sec: CTA`
+  },
+  {
+    id:4, date: new Date().toLocaleDateString(), product:"All", category:"Advertorials",
+    title:"Advertorials — How To Use",
+    content:`HOW TO USE THIS FOLDER
+=======================
+Store your advertorial copy here per product.
+
+WHAT IS AN ADVERTORIAL:
+A bridge page between your FB ad and VSL lander.
+Reads like an article/editorial — not an ad.
+Cold traffic needs to be warmed up before hitting the offer.
+
+ADVERTORIAL STRUCTURE:
+1. Headline — speaks directly to the pain or curiosity
+2. Opening — agitate the problem, make them feel seen
+3. Middle — introduce the mechanism (why your product works, not what it is yet)
+4. Transition — build curiosity toward the solution
+5. CTA — "Watch this short video to see how it works" → VSL lander
+
+LENGTH: 400-600 words
+TONE: Editorial/journalist, not salesy
+FRAME: Discovery piece, not an ad
+
+BLUE ZONES ADVERTORIAL FRAME:
+- Headline: Blue Zones curiosity hook
+- Opening: Tell the Blue Zones research story
+- Middle: Zoom in on the specific compound
+- PubMed reference: Drop clinical study as proof
+- Transition: "This is why thousands of Americans over 50 are adding this to their morning routine"
+- CTA: Watch the short video below
+
+FOR EACH ADVERTORIAL STORE:
+- Product name
+- Angle used
+- Full copy
+- Date created
+- Performance notes after testing`
+  },
+  {
+    id:5, date: new Date().toLocaleDateString(), product:"All", category:"VSL Scripts",
+    title:"VSL Scripts — How To Use",
+    content:`HOW TO USE THIS FOLDER
+=======================
+Store your VSL scripts here per product.
+
+VSL STRUCTURE (5-10 mins at $27 price point):
+0:00-0:30  — Hook: Grab with pain or shocking statement
+0:30-2:00  — Problem: Agitate, make it real and personal
+2:00-4:00  — Enemy: Why everything else has failed them
+4:00-6:00  — Discovery: How the mechanism/solution was found
+6:00-8:00  — Solution: Introduce your product as the answer
+8:00-9:00  — Proof: Testimonials, results, before/after
+9:00-10:00 — Offer + CTA: Price, guarantee, urgency, buy now
+
+PRODUCTION OPTIONS:
+- ElevenLabs — AI voiceover (clean, professional, no face needed)
+- CapCut — editing
+- Fiverr — hire a VSL editor
+
+FOR EACH SCRIPT STORE:
+- Product name
+- Angle used
+- Full word-for-word script with timing notes
+- Voiceover tool used
+- Date created
+- CPA achieved after testing`
+  },
+  {
+    id:6, date: new Date().toLocaleDateString(), product:"All", category:"Shopify Copy",
+    title:"Shopify Copy — How To Use",
+    content:`HOW TO USE THIS FOLDER
+=======================
+Store your Shopify product page copy here.
+
+NOTE: Keep the product page simple — the VSL has already done the selling by the time they land here.
+
+PRODUCT PAGE STRUCTURE:
+1. Headline — restate the transformation
+2. Product images — lifestyle first, not just white background
+3. Short bullet benefits above the fold (3-5 max)
+4. Reviews prominently placed
+5. Guarantee block (30 day money back)
+6. Sticky add to cart button
+7. FAQ section below fold
+
+OFFER TIPS FOR $27 PRICE POINT:
+- Add a bundle option (2x or 3x units)
+- Add an upsell on the cart page
+- 30 day guarantee removes all purchase friction
+- If 30% take a $20 upsell your effective AOV jumps to $33+
+
+FOR EACH PAGE STORE:
+- Product name
+- Headline
+- Bullet benefits
+- Guarantee copy
+- FAQ questions and answers
+- Upsell offer details`
+  },
+  {
+    id:7, date: new Date().toLocaleDateString(), product:"All", category:"Winner Log",
+    title:"Winner Log — How To Use",
+    content:`HOW TO USE THIS FOLDER
+=======================
+This is your most valuable asset over time.
+Every time something works, document it here.
+
+FOR EACH WINNER LOG:
+- Product name
+- Winning angle
+- Winning hook (exact words)
+- Ad format (video/image/carousel)
+- CPA achieved
+- ROAS achieved
+- What audience worked best
+- What funnel stage converted best
+- Why you think it worked
+- Date it started winning
+- How long it ran before fatiguing
+
+SCALING NOTES TO ADD:
+- What budget level it held CPA at
+- What audiences you expanded to
+- What new creatives you built on the same angle
+- When it started to fatigue and why
+
+THE RULE:
+Scale the angle not just the ad.
+When something wins, build 5 new creatives on the same angle.
+Document all of them here.`
+  },
+  {
+    id:8, date: new Date().toLocaleDateString(), product:"All", category:"General",
+    title:"General — Project Overview",
+    content:`DROPSHIPPING COMMAND CENTER
+============================
+Started: ${new Date().toLocaleDateString()}
+Starting Budget: $1,000
+Funnel: FB Ad → Advertorial → VSF Lander → Shopify
+
+PRODUCT TARGETS:
+- Sell Price: $27-$37
+- Cost Price: $4
+- Target CPA: Under $15
+- Breakeven CPA: $17-23
+
+CAMPAIGN STRUCTURE PER PRODUCT:
+- 1 CBO campaign per product
+- $30-40/day per product
+- 3 ad sets per campaign (broad, interest, competitor)
+- 3 creatives per ad set
+- Test in batches of 3, rotate every 5 days
+
+KILL RULES:
+- Spent $45-50 with zero purchases → kill
+- CTR below 0.8% after $20 spend → kill early
+- CPC above $2.50-3 with no ATC → kill
+
+KEEP RULES:
+- CTR above 1.5% with ATC signals → keep watching
+- CPA under breakeven → keep and optimise
+
+SCALE RULES:
+- CPA under $15 with 3+ purchases → winner
+- Horizontal first (duplicate ad sets, new audiences)
+- Vertical: increase budget 20-30% every 48 hours
+- Never touch a winning ad set — duplicate it
+- Feed 3-5 new creatives every week on winning angle
+
+WORKFLOW:
+1. Spy → build swipe file
+2. Brief Claude → generate all funnel assets
+3. Produce creatives (CapCut, ElevenLabs)
+4. Build funnel (advertorial + VSL lander + Shopify)
+5. Launch campaign
+6. Log daily data here
+7. Kill losers, scale winners
+8. Snapshot every week end`
+  }
+];
+
 function load(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
   catch { return fallback; }
@@ -54,7 +336,7 @@ function App() {
   const [campaigns, setCampaigns] = useState(() => load("dsc_campaigns", []));
   const [expenses, setExpenses] = useState(() => load("dsc_expenses", INIT_EXPENSES));
   const [snapshots, setSnapshots] = useState(() => load("dsc_snapshots", []));
-  const [notes, setNotes] = useState(() => load("dsc_notes", []));
+  const [notes, setNotes] = useState(() => load("dsc_notes", TEMPLATE_NOTES));
   const [snapLabel, setSnapLabel] = useState("");
   const [folderFilter, setFolderFilter] = useState("All");
   const [expandedNote, setExpandedNote] = useState(null);
@@ -102,8 +384,7 @@ function App() {
       totalSpend,totalRev,totalSales,totalExp,netProfit,avgCPA,ROAS,budgetLeft,
       prodStats:prodStats.map(p=>({name:p.name,spend:p.spend,sales:p.sales,rev:p.rev,profit:p.profit,cpa:p.cpa}))
     };
-    const updated = [snap,...snapshots];
-    setSnapshots(updated);
+    setSnapshots([snap,...snapshots]);
     setSnapLabel("");
   };
 
@@ -130,6 +411,7 @@ function App() {
     card:{background:"#1f2937",borderRadius:12,padding:16,border:"1px solid #374151",marginBottom:12},
     btn:{background:"#2563eb",color:"#fff",padding:"6px 14px",borderRadius:6,fontSize:13,fontWeight:600},
     btnSm:{background:"#374151",color:"#aaa",padding:"5px 10px",borderRadius:6,fontSize:12},
+    btnDanger:{background:"#7f1d1d",color:"#fca5a5",padding:"5px 10px",borderRadius:6,fontSize:12},
     tabActive:{background:"#2563eb",color:"#fff",padding:"7px 14px",borderRadius:8,fontSize:12,fontWeight:600},
     tabInactive:{background:"#1f2937",color:"#9ca3af",padding:"7px 14px",borderRadius:8,fontSize:12,fontWeight:500},
     th:{color:"#9ca3af",fontSize:11,fontWeight:600,paddingBottom:8,paddingRight:12,textAlign:"left"},
