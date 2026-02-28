@@ -22,7 +22,6 @@
   .img-thumb{position:relative;display:inline-block;margin:4px}
   .img-thumb img{max-width:120px;max-height:120px;border-radius:6px;border:1px solid #374151;object-fit:cover}
   .img-thumb .del{position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .img-full{max-width:100%;border-radius:8px;margin:6px 0;border:1px solid #374151;cursor:pointer}
   .lightbox{position:fixed;top:0;left:0;width:100%;height:100%;background:#000000cc;display:flex;align-items:center;justify-content:center;z-index:9999;cursor:pointer}
   .lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain}
 </style>
@@ -30,96 +29,59 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const {useState, useEffect, useRef} = React;
+const {useState,useEffect,useRef}=React;
 
-const FOLDER_CATS = ["Swipe File","Angles & Pain Points","Ad Copy & Scripts","Advertorials","VSL Scripts","Shopify Copy","Winner Log","General"];
-const CAT_COLORS = {"Swipe File":"#8b5cf6","Angles & Pain Points":"#f59e0b","Ad Copy & Scripts":"#3b82f6","Advertorials":"#10b981","VSL Scripts":"#f472b6","Shopify Copy":"#34d399","Winner Log":"#fbbf24","General":"#6b7280"};
-const STATUS_COLORS = {testing:"#f59e0b",winner:"#10b981",killed:"#ef4444",scaling:"#3b82f6"};
+const FOLDER_CATS=["Swipe File","Angles & Pain Points","Ad Copy & Scripts","Advertorials","VSL Scripts","Shopify Copy","Winner Log","General"];
+const CAT_COLORS={"Swipe File":"#8b5cf6","Angles & Pain Points":"#f59e0b","Ad Copy & Scripts":"#3b82f6","Advertorials":"#10b981","VSL Scripts":"#f472b6","Shopify Copy":"#34d399","Winner Log":"#fbbf24","General":"#6b7280"};
+const STATUS_COLORS={testing:"#f59e0b",winner:"#10b981",killed:"#ef4444",scaling:"#3b82f6"};
+const TODAY=new Date().toISOString().split("T")[0];
 
-const INIT_PRODUCTS = [
+const INIT_PRODUCTS=[
   {id:1,name:"Product A",sellPrice:27,costPrice:4,shipping:4,fees:1},
   {id:2,name:"Product B",sellPrice:27,costPrice:4,shipping:4,fees:1},
   {id:3,name:"Product C",sellPrice:27,costPrice:4,shipping:4,fees:1},
   {id:4,name:"Product D",sellPrice:27,costPrice:4,shipping:4,fees:1},
 ];
-const INIT_EXPENSES = [
+const INIT_EXPENSES=[
   {id:1,label:"Shopify Monthly",amount:39,category:"tools"},
   {id:2,label:"Domain",amount:15,category:"tools"},
   {id:3,label:"PageFly/GemPages",amount:29,category:"tools"},
 ];
 
-const TEMPLATE_NOTES = [
-  {id:1,date:new Date().toLocaleDateString(),product:"All",category:"Swipe File",images:[],title:"Swipe File — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nPaste everything you find from spy research here.\nUse the image upload to save ad screenshots directly.\n\nFor each ad you save include:\n- Platform (FB, TikTok)\n- How long it has been running (longer = profitable)\n- Hook used in first 3 seconds\n- Format (video, image, carousel)\n- Angle used (pain, curiosity, social proof)\n- Link to the ad if possible\n- Notes on why you think it works\n\nTOOLS TO USE:\n- Minea\n- AdSpy\n- BigSpy\n- Facebook Ad Library (free)\n- TikTok Creative Center (free)\n\nWHAT TO LOOK FOR:\n- Ads running 2+ weeks = likely profitable\n- Hooks that repeat across multiple ads = proven angle\n- Comment sections showing buyer intent`},
-  {id:2,date:new Date().toLocaleDateString(),product:"All",category:"Angles & Pain Points",images:[],title:"Angles & Pain Points — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nFor each product store your angle research here.\n\nANGLE FRAMEWORK:\nEvery strong angle needs 3 things:\n1. A real population or authority (credibility)\n2. A curiosity gap (why do they live longer / stay pain free)\n3. A specific compound or mechanism that bridges to your product\n\nPROVEN ANGLE TYPES:\n- Pain/Problem\n- Curiosity\n- Transformation\n- Social Proof\n- Enemy\n- Authority\n\nBLUE ZONE ANGLES:\n- Blue Zones (Okinawa, Sardinia)\n- NASA/Military Research\n- Mediterranean Diet\n- Traditional Chinese Medicine\n- Nobel Prize research\n- Hunza Valley\n- Harvard Longevity Lab\n- Sardinian Shepherd\n- Cold Water/Scandinavian\n- Ancestral Diet`},
-  {id:3,date:new Date().toLocaleDateString(),product:"All",category:"Ad Copy & Scripts",images:[],title:"Ad Copy & Scripts — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nStore all your ad hooks, scripts and copy here.\n\nCREATIVE TESTING SYSTEM:\n- Test 3 creatives per ad set max\n- Each creative = different hook/angle\n- Rotate in batches of 3, kill losers, keep winners\n- Never pull a winning ad — only replace losers\n\nHOOK FORMULA:\nHook = Pain/Curiosity + Avatar + Specificity\n\nVIDEO AD STRUCTURE (30-60 sec):\n0-3 sec: Hook\n3-15 sec: Agitate the problem\n15-40 sec: Introduce mechanism/solution\n40-55 sec: Social proof\n55-60 sec: CTA`},
-  {id:4,date:new Date().toLocaleDateString(),product:"All",category:"Advertorials",images:[],title:"Advertorials — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nStore your advertorial copy here per product.\n\nADVERTORIAL STRUCTURE:\n1. Headline — speaks to pain or curiosity\n2. Opening — agitate the problem\n3. Middle — introduce the mechanism\n4. Transition — build curiosity toward solution\n5. CTA — Watch this short video\n\nLENGTH: 400-600 words\nTONE: Editorial/journalist, not salesy\nFRAME: Discovery piece, not an ad`},
-  {id:5,date:new Date().toLocaleDateString(),product:"All",category:"VSL Scripts",images:[],title:"VSL Scripts — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nStore your VSL scripts here per product.\n\nVSL STRUCTURE (5-10 mins):\n0:00-0:30  — Hook\n0:30-2:00  — Problem agitation\n2:00-4:00  — Enemy (why everything else failed)\n4:00-6:00  — Discovery\n6:00-8:00  — Solution\n8:00-9:00  — Proof\n9:00-10:00 — Offer + CTA\n\nPRODUCTION:\n- ElevenLabs for AI voiceover\n- CapCut for editing\n- Fiverr for VSL editors`},
-  {id:6,date:new Date().toLocaleDateString(),product:"All",category:"Shopify Copy",images:[],title:"Shopify Copy — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nStore your Shopify product page copy here.\n\nPRODUCT PAGE STRUCTURE:\n1. Headline — restate the transformation\n2. Lifestyle product images\n3. Short bullet benefits (3-5 max)\n4. Reviews prominently placed\n5. 30 day guarantee block\n6. Sticky add to cart button\n7. FAQ section below fold\n\nOFFER TIPS:\n- Add bundle option (2x or 3x units)\n- Add upsell on cart page\n- 30 day guarantee removes friction`},
-  {id:7,date:new Date().toLocaleDateString(),product:"All",category:"Winner Log",images:[],title:"Winner Log — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nDocument every winner here. This becomes your most valuable asset.\n\nFOR EACH WINNER LOG:\n- Product name\n- Winning angle\n- Winning hook (exact words)\n- Ad format\n- CPA achieved\n- ROAS achieved\n- Best audience\n- Why you think it worked\n- Date started winning\n- How long before fatigue\n\nTHE RULE:\nScale the angle not just the ad.\nBuild 5 new creatives on the same winning angle.`},
-  {id:8,date:new Date().toLocaleDateString(),product:"All",category:"General",images:[],title:"General — Project Overview",content:`DROPSHIPPING COMMAND CENTER\n============================\nStarted: ${new Date().toLocaleDateString()}\nStarting Budget: $1,000\nFunnel: FB Ad → Advertorial → VSL Lander → Shopify\n\nPRODUCT TARGETS:\n- Sell Price: $27-$37\n- Cost Price: $4\n- Target CPA: Under $15\n- Breakeven CPA: $17-23\n\nKILL RULES:\n- Spent $45-50 with zero purchases → kill\n- CTR below 0.8% after $20 spend → kill\n- CPC above $2.50-3 with no ATC → kill\n\nSCALE RULES:\n- CPA under $15 with 3+ purchases → winner\n- Horizontal first (new audiences)\n- Vertical: 20-30% budget increase every 48hrs\n- Never touch a winning ad set\n- 3-5 new creatives every week on winning angle`}
+const BLANK_CAMPAIGN={date:TODAY,campaign:"",adset:"",creative:"",product:"Product A",budget:"",spend:"",ctr:"",cpc:"",atc:"",purchases:"",revenue:"",status:"testing"};
+
+const TEMPLATE_NOTES=[
+  {id:1,date:new Date().toLocaleDateString(),product:"All",category:"Swipe File",images:[],title:"Swipe File — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nPaste everything you find from spy research here.\nUse the image upload to save ad screenshots directly.\n\nFor each ad save:\n- Platform (FB, TikTok)\n- How long running (longer = profitable)\n- Hook used in first 3 seconds\n- Format (video, image, carousel)\n- Angle (pain, curiosity, social proof)\n- Link to ad\n- Notes on why it works\n\nTOOLS:\n- Minea, AdSpy, BigSpy\n- Facebook Ad Library (free)\n- TikTok Creative Center (free)\n\nWHAT TO LOOK FOR:\n- Ads running 2+ weeks = likely profitable\n- Repeated hooks = proven angle\n- Comments showing buyer intent`},
+  {id:2,date:new Date().toLocaleDateString(),product:"All",category:"Angles & Pain Points",images:[],title:"Angles & Pain Points — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nANGLE FRAMEWORK:\n1. Real population or authority (credibility)\n2. Curiosity gap\n3. Specific mechanism bridging to product\n\nPROVEN ANGLE TYPES:\n- Pain/Problem\n- Curiosity\n- Transformation\n- Social Proof\n- Enemy\n- Authority\n\nBLUE ZONE ANGLES:\n- Blue Zones (Okinawa, Sardinia)\n- NASA/Military Research\n- Mediterranean Diet\n- Traditional Chinese Medicine\n- Nobel Prize research\n- Hunza Valley\n- Harvard Longevity Lab\n- Sardinian Shepherd\n- Cold Water/Scandinavian\n- Ancestral Diet`},
+  {id:3,date:new Date().toLocaleDateString(),product:"All",category:"Ad Copy & Scripts",images:[],title:"Ad Copy & Scripts — How To Use",content:`HOW TO USE THIS FOLDER\n=======================\nCREATIVE TESTING:\n- 3 creatives per ad set max\n- Each creative = different hook/angle\n- Rotate batches of 3, kill losers, keep winners\n\nHOOK FORMULA:\nPain/Curiosity + Avatar + Specificity\n\nVIDEO STRUCTURE (30-60 sec):\n0-3s: Hook\n3-15s: Agitate problem\n15-40s: Mechanism/solution\n40-55s: Social proof\n55-60s: CTA`},
+  {id:4,date:new Date().toLocaleDateString(),product:"All",category:"Advertorials",images:[],title:"Advertorials — How To Use",content:`STRUCTURE:\n1. Headline — pain or curiosity\n2. Opening — agitate problem\n3. Middle — introduce mechanism\n4. Transition — build curiosity\n5. CTA — Watch this short video\n\nLENGTH: 400-600 words\nTONE: Editorial, not salesy`},
+  {id:5,date:new Date().toLocaleDateString(),product:"All",category:"VSL Scripts",images:[],title:"VSL Scripts — How To Use",content:`VSL STRUCTURE (5-10 mins):\n0:00-0:30  Hook\n0:30-2:00  Problem\n2:00-4:00  Enemy\n4:00-6:00  Discovery\n6:00-8:00  Solution\n8:00-9:00  Proof\n9:00-10:00 Offer + CTA\n\nPRODUCTION:\n- ElevenLabs (AI voiceover)\n- CapCut (editing)\n- Fiverr (VSL editors)`},
+  {id:6,date:new Date().toLocaleDateString(),product:"All",category:"Shopify Copy",images:[],title:"Shopify Copy — How To Use",content:`PAGE STRUCTURE:\n1. Headline — restate transformation\n2. Lifestyle images\n3. Bullet benefits (3-5)\n4. Reviews\n5. 30 day guarantee\n6. Sticky ATC button\n7. FAQ below fold\n\nOFFER TIPS:\n- Bundle option (2x or 3x)\n- Upsell on cart page\n- Guarantee removes friction`},
+  {id:7,date:new Date().toLocaleDateString(),product:"All",category:"Winner Log",images:[],title:"Winner Log — How To Use",content:`FOR EACH WINNER LOG:\n- Product\n- Winning angle\n- Winning hook (exact words)\n- Ad format\n- CPA achieved\n- ROAS achieved\n- Best audience\n- Why it worked\n- Date started winning\n- How long before fatigue\n\nRULE:\nScale the angle not just the ad.\nBuild 5 new creatives on same winning angle.`},
+  {id:8,date:new Date().toLocaleDateString(),product:"All",category:"General",images:[],title:"General — Project Overview",content:`DROPSHIPPING COMMAND CENTER\nStarted: ${new Date().toLocaleDateString()}\nBudget: $1,000\nFunnel: FB Ad → Advertorial → VSL → Shopify\n\nKILL RULES:\n- $45-50 spend, zero purchases → kill\n- CTR below 0.8% after $20 → kill\n- CPC above $2.50 no ATC → kill\n\nSCALE RULES:\n- CPA under $15 with 3+ purchases → winner\n- Horizontal first (new audiences)\n- Vertical: 20-30% budget increase every 48hrs\n- Never touch winning ad set\n- 3-5 new creatives weekly on winning angle`}
 ];
 
-function load(key,fallback){try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback;}catch{return fallback;}}
-function save(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch{}}
-
-function imageToBase64(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result);
-    r.onerror=rej;
-    r.readAsDataURL(file);
-  });
-}
+function load(k,fb){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch{return fb;}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+function imgToB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});}
 
 function ImageUploader({images=[],onChange}){
-  const fileRef=useRef();
-  const [dragging,setDragging]=useState(false);
-
-  const handleFiles=async(files)=>{
-    const newImgs=[];
-    for(const f of Array.from(files)){
-      if(!f.type.startsWith("image/"))continue;
-      const b64=await imageToBase64(f);
-      newImgs.push({id:Date.now()+Math.random(),src:b64,name:f.name});
-    }
-    onChange([...images,...newImgs]);
+  const ref=useRef();
+  const [drag,setDrag]=useState(false);
+  const handle=async(files)=>{
+    const imgs=[];
+    for(const f of Array.from(files)){if(!f.type.startsWith("image/"))continue;const b=await imgToB64(f);imgs.push({id:Date.now()+Math.random(),src:b,name:f.name});}
+    onChange([...images,...imgs]);
   };
-
-  const onDrop=e=>{e.preventDefault();setDragging(false);handleFiles(e.dataTransfer.files);};
-  const onPaste=e=>{const items=e.clipboardData?.items;if(!items)return;const files=[...items].filter(i=>i.type.startsWith("image/")).map(i=>i.getAsFile());if(files.length)handleFiles(files);};
-
   return(
     <div>
-      <div className={`drop-zone${dragging?" drag-over":""}`}
-        onDragOver={e=>{e.preventDefault();setDragging(true);}}
-        onDragLeave={()=>setDragging(false)}
-        onDrop={onDrop}
-        onPaste={onPaste}
-        onClick={()=>fileRef.current.click()}
-        tabIndex={0}
-        onKeyDown={e=>e.key==="Enter"&&fileRef.current.click()}
-      >
-        <div style={{color:"#6b7280",fontSize:12}}>
-          📎 Click to upload, drag & drop, or <strong>paste (Ctrl+V)</strong> images here
-        </div>
-        <input ref={fileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handleFiles(e.target.files)}/>
+      <div className={`drop-zone${drag?" drag-over":""}`} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);handle(e.dataTransfer.files);}} onPaste={e=>{const files=[...( e.clipboardData?.items||[])].filter(i=>i.type.startsWith("image/")).map(i=>i.getAsFile());if(files.length)handle(files);}} onClick={()=>ref.current.click()} tabIndex={0}>
+        <div style={{color:"#6b7280",fontSize:12}}>📎 Click, drag & drop, or <strong>Ctrl+V</strong> to paste images</div>
+        <input ref={ref} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handle(e.target.files)}/>
       </div>
-      {images.length>0&&(
-        <div style={{display:"flex",flexWrap:"wrap",marginTop:8}}>
-          {images.map(img=>(
-            <div key={img.id} className="img-thumb">
-              <img src={img.src} alt={img.name||""}/>
-              <div className="del" onClick={()=>onChange(images.filter(x=>x.id!==img.id))}>✕</div>
-            </div>
-          ))}
-        </div>
-      )}
+      {images.length>0&&<div style={{display:"flex",flexWrap:"wrap",marginTop:8}}>{images.map(img=><div key={img.id} className="img-thumb"><img src={img.src} alt=""/><div className="del" onClick={()=>onChange(images.filter(x=>x.id!==img.id))}>✕</div></div>)}</div>}
     </div>
   );
-}
-
-function Lightbox({src,onClose}){
-  return <div className="lightbox" onClick={onClose}><img src={src} alt=""/></div>;
 }
 
 function App(){
@@ -133,10 +95,11 @@ function App(){
   const [folderFilter,setFolderFilter]=useState("All");
   const [expandedNote,setExpandedNote]=useState(null);
   const [editProduct,setEditProduct]=useState(null);
-  const [lightboxSrc,setLightboxSrc]=useState(null);
-  const [newCampaign,setNewCampaign]=useState({product:"Product A",day:"",spend:"",sales:"",revenue:"",status:"testing"});
+  const [lightbox,setLightbox]=useState(null);
+  const [nc,setNc]=useState(BLANK_CAMPAIGN);
   const [newExpense,setNewExpense]=useState({label:"",amount:"",category:"tools"});
   const [newNote,setNewNote]=useState({title:"",content:"",category:"General",product:"All",images:[]});
+  const [expandedCampaign,setExpandedCampaign]=useState(null);
 
   useEffect(()=>save("dsc_products",products),[products]);
   useEffect(()=>save("dsc_campaigns",campaigns),[campaigns]);
@@ -144,39 +107,48 @@ function App(){
   useEffect(()=>save("dsc_snapshots",snapshots),[snapshots]);
   useEffect(()=>save("dsc_notes",notes),[notes]);
 
+  // Dashboard stats from campaigns
   const totalSpend=campaigns.reduce((s,c)=>s+Number(c.spend||0),0);
   const totalRev=campaigns.reduce((s,c)=>s+Number(c.revenue||0),0);
-  const totalSales=campaigns.reduce((s,c)=>s+Number(c.sales||0),0);
+  const totalPurchases=campaigns.reduce((s,c)=>s+Number(c.purchases||0),0);
+  const totalATC=campaigns.reduce((s,c)=>s+Number(c.atc||0),0);
   const totalExp=expenses.reduce((s,e)=>s+Number(e.amount||0),0);
-  const totalCOGS=campaigns.reduce((s,c)=>{const p=products.find(p=>p.name===c.product);if(!p)return s;return s+Number(c.sales||0)*(Number(p.costPrice)+Number(p.shipping)+Number(p.fees));},0);
+  const totalCOGS=campaigns.reduce((s,c)=>{const p=products.find(p=>p.name===c.product);if(!p)return s;return s+Number(c.purchases||0)*(Number(p.costPrice)+Number(p.shipping)+Number(p.fees));},0);
   const netProfit=totalRev-totalSpend-totalCOGS-totalExp;
-  const avgCPA=totalSales>0?(totalSpend/totalSales).toFixed(2):"—";
+  const avgCPA=totalPurchases>0?(totalSpend/totalPurchases).toFixed(2):"—";
   const ROAS=totalSpend>0?(totalRev/totalSpend).toFixed(2):"—";
+  const avgCTR=campaigns.filter(c=>c.ctr).length>0?(campaigns.reduce((s,c)=>s+Number(c.ctr||0),0)/campaigns.filter(c=>c.ctr).length).toFixed(2):"—";
   const budgetLeft=1000-totalSpend-totalExp;
 
   const prodStats=products.map(p=>{
     const pc=campaigns.filter(c=>c.product===p.name);
     const spend=pc.reduce((s,c)=>s+Number(c.spend||0),0);
-    const sales=pc.reduce((s,c)=>s+Number(c.sales||0),0);
+    const purchases=pc.reduce((s,c)=>s+Number(c.purchases||0),0);
     const rev=pc.reduce((s,c)=>s+Number(c.revenue||0),0);
-    const cogs=sales*(Number(p.costPrice)+Number(p.shipping)+Number(p.fees));
+    const cogs=purchases*(Number(p.costPrice)+Number(p.shipping)+Number(p.fees));
     const profit=rev-spend-cogs;
-    const cpa=sales>0?(spend/sales).toFixed(2):"—";
+    const cpa=purchases>0?(spend/purchases).toFixed(2):"—";
     const margin=Number(p.sellPrice)-Number(p.costPrice)-Number(p.shipping)-Number(p.fees);
-    return{...p,spend,sales,rev,profit,cpa,margin};
+    return{...p,spend,purchases,rev,profit,cpa,margin};
   });
 
   const takeSnap=()=>{
-    const snap={id:Date.now(),label:snapLabel.trim()||`Snapshot ${snapshots.length+1}`,date:new Date().toLocaleDateString(),time:new Date().toLocaleTimeString(),totalSpend,totalRev,totalSales,totalExp,netProfit,avgCPA,ROAS,budgetLeft,prodStats:prodStats.map(p=>({name:p.name,spend:p.spend,sales:p.sales,rev:p.rev,profit:p.profit,cpa:p.cpa}))};
+    const snap={id:Date.now(),label:snapLabel.trim()||`Snapshot ${snapshots.length+1}`,date:new Date().toLocaleDateString(),time:new Date().toLocaleTimeString(),totalSpend,totalRev,totalPurchases,totalExp,netProfit,avgCPA,ROAS,avgCTR,budgetLeft,prodStats:prodStats.map(p=>({name:p.name,spend:p.spend,purchases:p.purchases,rev:p.rev,profit:p.profit,cpa:p.cpa}))};
     setSnapshots([snap,...snapshots]);
     setSnapLabel("");
   };
 
-  const addCampaign=()=>{if(!newCampaign.day||!newCampaign.spend)return;setCampaigns([...campaigns,{...newCampaign,id:Date.now()}]);setNewCampaign({product:products[0]?.name||"Product A",day:"",spend:"",sales:"",revenue:"",status:"testing"});};
+  const addCampaign=()=>{
+    if(!nc.campaign||!nc.spend)return;
+    const cpa=Number(nc.purchases)>0?(Number(nc.spend)/Number(nc.purchases)).toFixed(2):"—";
+    const roas=Number(nc.spend)>0?(Number(nc.revenue)/Number(nc.spend)).toFixed(2):"—";
+    setCampaigns([...campaigns,{...nc,id:Date.now(),cpa,roas}]);
+    setNc({...BLANK_CAMPAIGN,date:new Date().toISOString().split("T")[0],product:nc.product});
+  };
+
   const addExpense=()=>{if(!newExpense.label||!newExpense.amount)return;setExpenses([...expenses,{...newExpense,id:Date.now(),amount:Number(newExpense.amount)}]);setNewExpense({label:"",amount:"",category:"tools"});};
   const addNote=()=>{if(!newNote.title)return;setNotes([{...newNote,id:Date.now(),date:new Date().toLocaleDateString()},...notes]);setNewNote({title:"",content:"",category:"General",product:"All",images:[]});};
-  const updateNoteImages=(id,imgs)=>setNotes(notes.map(n=>n.id===id?{...n,images:imgs}:n));
-
+  const updateNoteImgs=(id,imgs)=>setNotes(notes.map(n=>n.id===id?{...n,images:imgs}:n));
   const filteredNotes=folderFilter==="All"?notes:notes.filter(n=>n.category===folderFilter);
 
   const s={
@@ -186,24 +158,25 @@ function App(){
     btnSm:{background:"#374151",color:"#aaa",padding:"5px 10px",borderRadius:6,fontSize:12},
     tabActive:{background:"#2563eb",color:"#fff",padding:"7px 14px",borderRadius:8,fontSize:12,fontWeight:600},
     tabInactive:{background:"#1f2937",color:"#9ca3af",padding:"7px 14px",borderRadius:8,fontSize:12,fontWeight:500},
-    th:{color:"#9ca3af",fontSize:11,fontWeight:600,paddingBottom:8,paddingRight:12,textAlign:"left"},
-    td:{fontSize:12,paddingBottom:6,paddingRight:12,paddingTop:6,borderBottom:"1px solid #374151"},
+    th:{color:"#9ca3af",fontSize:11,fontWeight:600,paddingBottom:8,paddingRight:10,textAlign:"left",whiteSpace:"nowrap"},
+    td:{fontSize:11,paddingBottom:6,paddingRight:10,paddingTop:6,borderBottom:"1px solid #374151",whiteSpace:"nowrap"},
     label:{fontSize:11,color:"#9ca3af",marginBottom:4,display:"block"},
-    grid2:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8},
-    kpiGrid:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:10,marginBottom:12},
+    grid:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8},
+    kpiGrid:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:10,marginBottom:12},
   };
 
   const TABS=["dashboard","campaigns","products","expenses","folder","snapshots"];
   const TAB_LABELS={dashboard:"📊 Dashboard",campaigns:"📈 Campaigns",products:"📦 Products",expenses:"💸 Expenses",folder:"📁 Folder",snapshots:"📷 Snapshots"};
 
+  const signal=(cpa,margin)=>cpa==="—"?"⚪ No data":Number(cpa)<=margin*0.65?"🟢 Scale":Number(cpa)<=margin?"🟡 Watch":"🔴 Kill";
+
   return(
     <div style={s.page}>
-      {lightboxSrc&&<Lightbox src={lightboxSrc} onClose={()=>setLightboxSrc(null)}/>}
+      {lightbox&&<div className="lightbox" onClick={()=>setLightbox(null)}><img src={lightbox} alt=""/></div>}
       <div style={{marginBottom:16}}>
         <h1 style={{fontSize:20,fontWeight:700}}>🚀 Dropshipping Command Center</h1>
         <p style={{color:"#6b7280",fontSize:12,marginTop:4}}>Starting Budget: $1,000 — Data saves automatically</p>
       </div>
-
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
         {TABS.map(t=><button key={t} style={tab===t?s.tabActive:s.tabInactive} onClick={()=>setTab(t)}>{TAB_LABELS[t]}</button>)}
       </div>
@@ -211,10 +184,18 @@ function App(){
       {/* DASHBOARD */}
       {tab==="dashboard"&&<>
         <div style={s.kpiGrid}>
-          {[{label:"Budget Left",val:`$${budgetLeft.toFixed(0)}`,color:budgetLeft<200?"#ef4444":"#10b981"},{label:"Total Ad Spend",val:`$${totalSpend.toFixed(0)}`,color:"#f59e0b"},{label:"Total Revenue",val:`$${totalRev.toFixed(0)}`,color:"#3b82f6"},{label:"Net Profit",val:`$${netProfit.toFixed(0)}`,color:netProfit>=0?"#10b981":"#ef4444"},{label:"Avg CPA",val:`$${avgCPA}`,color:"#a78bfa"},{label:"ROAS",val:`${ROAS}x`,color:"#f472b6"},{label:"Total Sales",val:totalSales,color:"#34d399"},{label:"Expenses",val:`$${totalExp}`,color:"#fb923c"}].map((k,i)=>(
-            <div key={i} style={s.card}><div style={{fontSize:11,color:"#9ca3af",marginBottom:4}}>{k.label}</div><div style={{fontSize:20,fontWeight:700,color:k.color}}>{k.val}</div></div>
-          ))}
+          {[
+            {label:"Budget Left",val:`$${budgetLeft.toFixed(0)}`,color:budgetLeft<200?"#ef4444":"#10b981"},
+            {label:"Total Spend",val:`$${totalSpend.toFixed(0)}`,color:"#f59e0b"},
+            {label:"Total Revenue",val:`$${totalRev.toFixed(0)}`,color:"#3b82f6"},
+            {label:"Net Profit",val:`$${netProfit.toFixed(0)}`,color:netProfit>=0?"#10b981":"#ef4444"},
+            {label:"Avg CPA",val:`$${avgCPA}`,color:"#a78bfa"},
+            {label:"ROAS",val:`${ROAS}x`,color:"#f472b6"},
+            {label:"Purchases",val:totalPurchases,color:"#34d399"},
+            {label:"Avg CTR",val:`${avgCTR}%`,color:"#fb923c"},
+          ].map((k,i)=><div key={i} style={s.card}><div style={{fontSize:11,color:"#9ca3af",marginBottom:4}}>{k.label}</div><div style={{fontSize:20,fontWeight:700,color:k.color}}>{k.val}</div></div>)}
         </div>
+
         <div style={s.card}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Budget Allocation</div>
           {[{label:"Ad Spend Reserve",allocated:600,used:totalSpend},{label:"Tools & Setup",allocated:150,used:totalExp},{label:"Scale Reserve",allocated:250,used:0}].map((b,i)=>(
@@ -224,18 +205,29 @@ function App(){
             </div>
           ))}
         </div>
+
         <div style={s.card}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Product Signals</div>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse"}}>
-              <thead><tr>{["Product","Spend","Sales","Revenue","CPA","BE CPA","Profit","Signal"].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
-              <tbody>{prodStats.map(p=>{const sig=p.cpa==="—"?"⚪ No data":Number(p.cpa)<=p.margin*0.65?"🟢 Scale":Number(p.cpa)<=p.margin?"🟡 Watch":"🔴 Kill";return<tr key={p.id}><td style={s.td}>{p.name}</td><td style={{...s.td,color:"#f59e0b"}}>${p.spend.toFixed(0)}</td><td style={s.td}>{p.sales}</td><td style={{...s.td,color:"#3b82f6"}}>${p.rev.toFixed(0)}</td><td style={s.td}>${p.cpa}</td><td style={{...s.td,color:"#9ca3af"}}>${p.margin.toFixed(0)}</td><td style={{...s.td,color:p.profit>=0?"#10b981":"#ef4444"}}>${p.profit.toFixed(0)}</td><td style={s.td}>{sig}</td></tr>;})}</tbody>
+              <thead><tr>{["Product","Spend","Purchases","Revenue","CPA","BE CPA","Profit","Signal"].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
+              <tbody>{prodStats.map(p=><tr key={p.id}>
+                <td style={s.td}>{p.name}</td>
+                <td style={{...s.td,color:"#f59e0b"}}>${p.spend.toFixed(0)}</td>
+                <td style={s.td}>{p.purchases}</td>
+                <td style={{...s.td,color:"#3b82f6"}}>${p.rev.toFixed(0)}</td>
+                <td style={s.td}>${p.cpa}</td>
+                <td style={{...s.td,color:"#9ca3af"}}>${p.margin.toFixed(0)}</td>
+                <td style={{...s.td,color:p.profit>=0?"#10b981":"#ef4444"}}>${p.profit.toFixed(0)}</td>
+                <td style={s.td}>{signal(p.cpa,p.margin)}</td>
+              </tr>)}</tbody>
             </table>
           </div>
         </div>
+
         <div style={s.card}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:6}}>📷 Quick Snapshot</div>
-          <p style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Freeze your current numbers to compare progress over time</p>
+          <p style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Freeze your numbers to compare progress over time</p>
           <div style={{display:"flex",gap:8}}><input placeholder='Label e.g. "End of Week 1"' value={snapLabel} onChange={e=>setSnapLabel(e.target.value)} style={{flex:1}}/><button style={s.btn} onClick={takeSnap}>Save</button></div>
         </div>
       </>}
@@ -243,24 +235,74 @@ function App(){
       {/* CAMPAIGNS */}
       {tab==="campaigns"&&<>
         <div style={s.card}>
-          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Log Daily Data</div>
-          <div style={s.grid2}>
-            <div><label style={s.label}>Product</label><select value={newCampaign.product} onChange={e=>setNewCampaign({...newCampaign,product:e.target.value})}>{products.map(p=><option key={p.id}>{p.name}</option>)}</select></div>
-            <div><label style={s.label}>Day/Date</label><input placeholder="Day 1" value={newCampaign.day} onChange={e=>setNewCampaign({...newCampaign,day:e.target.value})}/></div>
-            <div><label style={s.label}>Ad Spend ($)</label><input type="number" placeholder="50" value={newCampaign.spend} onChange={e=>setNewCampaign({...newCampaign,spend:e.target.value})}/></div>
-            <div><label style={s.label}>Sales (#)</label><input type="number" placeholder="3" value={newCampaign.sales} onChange={e=>setNewCampaign({...newCampaign,sales:e.target.value})}/></div>
-            <div><label style={s.label}>Revenue ($)</label><input type="number" placeholder="81" value={newCampaign.revenue} onChange={e=>setNewCampaign({...newCampaign,revenue:e.target.value})}/></div>
-            <div><label style={s.label}>Status</label><select value={newCampaign.status} onChange={e=>setNewCampaign({...newCampaign,status:e.target.value})}>{["testing","winner","scaling","killed"].map(s=><option key={s}>{s}</option>)}</select></div>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Log FB Campaign Entry</div>
+          <div style={{...s.grid,marginBottom:8}}>
+            <div><label style={s.label}>Date</label><input type="date" value={nc.date} onChange={e=>setNc({...nc,date:e.target.value})} style={{colorScheme:"dark"}}/></div>
+            <div><label style={s.label}>Campaign Name</label><input placeholder="Joint Pain — MOF" value={nc.campaign} onChange={e=>setNc({...nc,campaign:e.target.value})}/></div>
+            <div><label style={s.label}>Ad Set Name</label><input placeholder="Broad 25-65" value={nc.adset} onChange={e=>setNc({...nc,adset:e.target.value})}/></div>
+            <div><label style={s.label}>Creative / Hook</label><input placeholder="Morning stiffness hook" value={nc.creative} onChange={e=>setNc({...nc,creative:e.target.value})}/></div>
+            <div><label style={s.label}>Product</label><select value={nc.product} onChange={e=>setNc({...nc,product:e.target.value})}>{products.map(p=><option key={p.id}>{p.name}</option>)}</select></div>
+            <div><label style={s.label}>Daily Budget ($)</label><input type="number" placeholder="40" value={nc.budget} onChange={e=>setNc({...nc,budget:e.target.value})}/></div>
+            <div><label style={s.label}>Spend ($)</label><input type="number" placeholder="38" value={nc.spend} onChange={e=>setNc({...nc,spend:e.target.value})}/></div>
+            <div><label style={s.label}>CTR (%)</label><input type="number" placeholder="1.8" step="0.01" value={nc.ctr} onChange={e=>setNc({...nc,ctr:e.target.value})}/></div>
+            <div><label style={s.label}>CPC ($)</label><input type="number" placeholder="0.90" step="0.01" value={nc.cpc} onChange={e=>setNc({...nc,cpc:e.target.value})}/></div>
+            <div><label style={s.label}>Add to Carts</label><input type="number" placeholder="5" value={nc.atc} onChange={e=>setNc({...nc,atc:e.target.value})}/></div>
+            <div><label style={s.label}>Purchases</label><input type="number" placeholder="2" value={nc.purchases} onChange={e=>setNc({...nc,purchases:e.target.value})}/></div>
+            <div><label style={s.label}>Revenue ($)</label><input type="number" placeholder="54" value={nc.revenue} onChange={e=>setNc({...nc,revenue:e.target.value})}/></div>
+            <div><label style={s.label}>Status</label><select value={nc.status} onChange={e=>setNc({...nc,status:e.target.value})}>{["testing","winner","scaling","killed"].map(x=><option key={x}>{x}</option>)}</select></div>
           </div>
-          <button style={{...s.btn,marginTop:12}} onClick={addCampaign}>+ Log Entry</button>
+
+          {/* Auto-calculated preview */}
+          <div style={{background:"#111827",borderRadius:8,padding:12,marginBottom:12,display:"flex",gap:24}}>
+            <div><div style={{fontSize:10,color:"#6b7280"}}>CPA (auto)</div><div style={{fontSize:16,fontWeight:700,color:"#a78bfa"}}>{nc.purchases&&nc.spend?(Number(nc.spend)/Number(nc.purchases)).toFixed(2):"—"}</div></div>
+            <div><div style={{fontSize:10,color:"#6b7280"}}>ROAS (auto)</div><div style={{fontSize:16,fontWeight:700,color:"#f472b6"}}>{nc.spend&&nc.revenue?(Number(nc.revenue)/Number(nc.spend)).toFixed(2)+"x":"—"}</div></div>
+            <div><div style={{fontSize:10,color:"#6b7280"}}>Signal</div>
+              <div style={{fontSize:14,fontWeight:700}}>
+                {(()=>{
+                  const p=products.find(x=>x.name===nc.product);
+                  if(!p||!nc.purchases||!nc.spend)return"⚪ Enter data";
+                  const cpa=Number(nc.spend)/Number(nc.purchases);
+                  const margin=Number(p.sellPrice)-Number(p.costPrice)-Number(p.shipping)-Number(p.fees);
+                  return cpa<=margin*0.65?"🟢 Scale":cpa<=margin?"🟡 Watch":"🔴 Kill";
+                })()}
+              </div>
+            </div>
+          </div>
+
+          <button style={s.btn} onClick={addCampaign}>+ Log Entry</button>
         </div>
+
+        {/* Campaign Log Table */}
         <div style={s.card}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Campaign Log</div>
           {campaigns.length===0?<p style={{color:"#6b7280",fontSize:13}}>No entries yet.</p>:(
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse"}}>
-                <thead><tr>{["Day","Product","Spend","Sales","Revenue","CPA","ROAS","Status",""].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
-                <tbody>{campaigns.map(c=>{const cpa=c.sales>0?(Number(c.spend)/Number(c.sales)).toFixed(2):"—";const roas=c.spend>0?(Number(c.revenue)/Number(c.spend)).toFixed(2):"—";return<tr key={c.id}><td style={s.td}>{c.day}</td><td style={s.td}>{c.product}</td><td style={{...s.td,color:"#f59e0b"}}>${c.spend}</td><td style={s.td}>{c.sales}</td><td style={{...s.td,color:"#3b82f6"}}>${c.revenue}</td><td style={s.td}>${cpa}</td><td style={s.td}>{roas}x</td><td style={s.td}><span style={{background:STATUS_COLORS[c.status]||"#374151",color:"#fff",padding:"2px 8px",borderRadius:20,fontSize:11}}>{c.status}</span></td><td style={s.td}><button style={{background:"none",color:"#ef4444",fontSize:13}} onClick={()=>setCampaigns(campaigns.filter(x=>x.id!==c.id))}>✕</button></td></tr>;})}</tbody>
+                <thead>
+                  <tr>{["Date","Campaign","Ad Set","Creative","Product","Budget","Spend","CTR","CPC","ATC","Purchases","Revenue","CPA","ROAS","Status",""].map(h=><th key={h} style={s.th}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {campaigns.map(c=>(
+                    <tr key={c.id}>
+                      <td style={s.td}>{c.date}</td>
+                      <td style={s.td}>{c.campaign}</td>
+                      <td style={s.td}>{c.adset}</td>
+                      <td style={{...s.td,maxWidth:120,overflow:"hidden",textOverflow:"ellipsis"}}>{c.creative}</td>
+                      <td style={s.td}>{c.product}</td>
+                      <td style={s.td}>${c.budget||"—"}</td>
+                      <td style={{...s.td,color:"#f59e0b"}}>${c.spend}</td>
+                      <td style={{...s.td,color:Number(c.ctr)>=1.5?"#10b981":Number(c.ctr)>=0.8?"#f59e0b":"#ef4444"}}>{c.ctr||"—"}%</td>
+                      <td style={{...s.td,color:Number(c.cpc)<=2.5?"#10b981":"#ef4444"}}>${c.cpc||"—"}</td>
+                      <td style={s.td}>{c.atc||"—"}</td>
+                      <td style={s.td}>{c.purchases||"—"}</td>
+                      <td style={{...s.td,color:"#3b82f6"}}>${c.revenue||"—"}</td>
+                      <td style={{...s.td,color:"#a78bfa"}}>${c.cpa||"—"}</td>
+                      <td style={{...s.td,color:"#f472b6"}}>{c.roas||"—"}x</td>
+                      <td style={s.td}><span style={{background:STATUS_COLORS[c.status]||"#374151",color:"#fff",padding:"2px 8px",borderRadius:20,fontSize:10}}>{c.status}</span></td>
+                      <td style={s.td}><button style={{background:"none",color:"#ef4444",fontSize:13}} onClick={()=>setCampaigns(campaigns.filter(x=>x.id!==c.id))}>✕</button></td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           )}
@@ -274,7 +316,7 @@ function App(){
           {editProduct===p.id?(
             <div>
               <input style={{marginBottom:8}} value={p.name} onChange={e=>setProducts(products.map(x=>x.id===p.id?{...x,name:e.target.value}:x))}/>
-              <div style={s.grid2}>{[["sellPrice","Sell Price ($)"],["costPrice","Cost ($)"],["shipping","Shipping ($)"],["fees","Fees ($)"]].map(([k,l])=><div key={k}><label style={s.label}>{l}</label><input type="number" value={p[k]} onChange={e=>setProducts(products.map(x=>x.id===p.id?{...x,[k]:e.target.value}:x))}/></div>)}</div>
+              <div style={s.grid}>{[["sellPrice","Sell Price ($)"],["costPrice","Cost ($)"],["shipping","Shipping ($)"],["fees","Fees ($)"]].map(([k,l])=><div key={k}><label style={s.label}>{l}</label><input type="number" value={p[k]} onChange={e=>setProducts(products.map(x=>x.id===p.id?{...x,[k]:e.target.value}:x))}/></div>)}</div>
               <button style={{...s.btn,marginTop:10}} onClick={()=>setEditProduct(null)}>Save</button>
             </div>
           ):(
@@ -282,7 +324,7 @@ function App(){
               <div>
                 <div style={{fontWeight:700,marginBottom:8}}>{p.name}</div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"4px 24px",fontSize:12}}>
-                  {[["Sell Price",`$${p.sellPrice}`,"#fff"],["Cost",`$${p.costPrice}`,"#fff"],["Shipping",`$${p.shipping}`,"#fff"],["Fees",`$${p.fees}`,"#fff"],["True Margin",`$${margin.toFixed(2)}`,"#10b981"],["Breakeven CPA",`$${margin.toFixed(0)}`,"#f59e0b"],["Target CPA",`$${(margin*0.65).toFixed(0)}`,"#3b82f6"]].map(([l,v,c])=><span key={l} style={{color:"#9ca3af"}}>{l}: <span style={{color:c,fontWeight:600}}>{v}</span></span>)}
+                  {[["Sell",`$${p.sellPrice}`,"#fff"],["Cost",`$${p.costPrice}`,"#fff"],["Ship",`$${p.shipping}`,"#fff"],["Fees",`$${p.fees}`,"#fff"],["Margin",`$${margin.toFixed(2)}`,"#10b981"],["BE CPA",`$${margin.toFixed(0)}`,"#f59e0b"],["Target CPA",`$${(margin*0.65).toFixed(0)}`,"#3b82f6"]].map(([l,v,c])=><span key={l} style={{color:"#9ca3af"}}>{l}: <span style={{color:c,fontWeight:600}}>{v}</span></span>)}
                 </div>
               </div>
               <button style={s.btnSm} onClick={()=>setEditProduct(p.id)}>Edit</button>
@@ -295,7 +337,7 @@ function App(){
       {tab==="expenses"&&<>
         <div style={s.card}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Add Expense</div>
-          <div style={s.grid2}>
+          <div style={s.grid}>
             <div><label style={s.label}>Label</label><input placeholder="Spy Tool" value={newExpense.label} onChange={e=>setNewExpense({...newExpense,label:e.target.value})}/></div>
             <div><label style={s.label}>Amount ($)</label><input type="number" placeholder="49" value={newExpense.amount} onChange={e=>setNewExpense({...newExpense,amount:e.target.value})}/></div>
             <div><label style={s.label}>Category</label><select value={newExpense.category} onChange={e=>setNewExpense({...newExpense,category:e.target.value})}>{["tools","ads","product","creative","other"].map(c=><option key={c}>{c}</option>)}</select></div>
@@ -318,26 +360,21 @@ function App(){
       {tab==="folder"&&<>
         <div style={s.card}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Add Note / Reference</div>
-          <input style={{marginBottom:8}} placeholder="Title e.g. Blue Zones Hook Variations" value={newNote.title} onChange={e=>setNewNote({...newNote,title:e.target.value})}/>
+          <input style={{marginBottom:8}} placeholder="Title" value={newNote.title} onChange={e=>setNewNote({...newNote,title:e.target.value})}/>
           <textarea rows={4} style={{marginBottom:8,resize:"vertical"}} placeholder="Notes, copy, hooks, angles..." value={newNote.content} onChange={e=>setNewNote({...newNote,content:e.target.value})}/>
-          <div style={{marginBottom:8}}>
-            <label style={s.label}>Images (upload, drag & drop, or paste with Ctrl+V)</label>
-            <ImageUploader images={newNote.images} onChange={imgs=>setNewNote({...newNote,images:imgs})}/>
-          </div>
-          <div style={s.grid2}>
+          <div style={{marginBottom:8}}><label style={s.label}>Images</label><ImageUploader images={newNote.images} onChange={imgs=>setNewNote({...newNote,images:imgs})}/></div>
+          <div style={s.grid}>
             <div><label style={s.label}>Category</label><select value={newNote.category} onChange={e=>setNewNote({...newNote,category:e.target.value})}>{FOLDER_CATS.map(c=><option key={c}>{c}</option>)}</select></div>
             <div><label style={s.label}>Product</label><select value={newNote.product} onChange={e=>setNewNote({...newNote,product:e.target.value})}>{["All",...products.map(p=>p.name)].map(p=><option key={p}>{p}</option>)}</select></div>
           </div>
-          <button style={{...s.btn,marginTop:12}} onClick={addNote}>+ Save to Folder</button>
+          <button style={{...s.btn,marginTop:12}} onClick={addNote}>+ Save</button>
         </div>
 
         <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
-          {["All",...FOLDER_CATS].map(c=>(
-            <button key={c} style={{padding:"4px 10px",borderRadius:6,fontSize:11,fontWeight:600,background:folderFilter===c?(CAT_COLORS[c]||"#2563eb"):"#1f2937",color:folderFilter===c?"#fff":"#9ca3af"}} onClick={()=>setFolderFilter(c)}>{c}</button>
-          ))}
+          {["All",...FOLDER_CATS].map(c=><button key={c} style={{padding:"4px 10px",borderRadius:6,fontSize:11,fontWeight:600,background:folderFilter===c?(CAT_COLORS[c]||"#2563eb"):"#1f2937",color:folderFilter===c?"#fff":"#9ca3af"}} onClick={()=>setFolderFilter(c)}>{c}</button>)}
         </div>
 
-        {filteredNotes.length===0?<div style={s.card}><p style={{color:"#6b7280",fontSize:13}}>No notes in this category yet.</p></div>:
+        {filteredNotes.length===0?<div style={s.card}><p style={{color:"#6b7280",fontSize:13}}>No notes yet.</p></div>:
           filteredNotes.map(n=>(
             <div key={n.id} style={{...s.card,cursor:"pointer"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}} onClick={()=>setExpandedNote(expandedNote===n.id?null:n.id)}>
@@ -348,27 +385,15 @@ function App(){
                   {n.images?.length>0&&<span style={{fontSize:10,color:"#3b82f6"}}>🖼 {n.images.length}</span>}
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:8}}>
-                  <span style={{fontSize:11,color:"#6b7280",whiteSpace:"nowrap"}}>{n.date}</span>
+                  <span style={{fontSize:11,color:"#6b7280"}}>{n.date}</span>
                   <button style={{background:"none",color:"#6b7280",fontSize:13}} onClick={e=>{e.stopPropagation();setNotes(notes.filter(x=>x.id!==n.id));}}>✕</button>
                 </div>
               </div>
               {expandedNote===n.id&&(
                 <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #374151"}}>
                   {n.content&&<pre style={{color:"#d1d5db",fontSize:12,whiteSpace:"pre-wrap",marginBottom:12}}>{n.content}</pre>}
-                  {n.images?.length>0&&(
-                    <div>
-                      <div style={{fontSize:11,color:"#9ca3af",marginBottom:6}}>Images ({n.images.length})</div>
-                      <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:12}}>
-                        {n.images.map(img=>(
-                          <img key={img.id} src={img.src} alt="" className="img-full" style={{maxWidth:200,cursor:"pointer"}} onClick={()=>setLightboxSrc(img.src)}/>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div style={{marginTop:8}}>
-                    <label style={{...s.label,marginBottom:6}}>Add more images</label>
-                    <ImageUploader images={n.images||[]} onChange={imgs=>updateNoteImages(n.id,imgs)}/>
-                  </div>
+                  {n.images?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:12}}>{n.images.map(img=><img key={img.id} src={img.src} alt="" style={{maxWidth:200,borderRadius:8,cursor:"pointer",border:"1px solid #374151"}} onClick={()=>setLightbox(img.src)}/>)}</div>}
+                  <div style={{marginTop:8}}><label style={{...s.label,marginBottom:6}}>Add more images</label><ImageUploader images={n.images||[]} onChange={imgs=>updateNoteImgs(n.id,imgs)}/></div>
                 </div>
               )}
             </div>
@@ -380,30 +405,25 @@ function App(){
       {tab==="snapshots"&&<>
         <div style={s.card}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:6}}>📷 Save Snapshot</div>
-          <p style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Freeze your numbers to compare week over week</p>
-          <div style={{display:"flex",gap:8}}><input placeholder='Label e.g. "End of Week 1"' value={snapLabel} onChange={e=>setSnapLabel(e.target.value)} style={{flex:1}}/><button style={s.btn} onClick={takeSnap}>Save</button></div>
+          <p style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Freeze your numbers week over week</p>
+          <div style={{display:"flex",gap:8}}><input placeholder='e.g. "End of Week 1"' value={snapLabel} onChange={e=>setSnapLabel(e.target.value)} style={{flex:1}}/><button style={s.btn} onClick={takeSnap}>Save</button></div>
         </div>
         {snapshots.length===0?<div style={s.card}><p style={{color:"#6b7280",fontSize:13}}>No snapshots yet.</p></div>:
           snapshots.map(snap=>(
             <div key={snap.id} style={s.card}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
                 <div><div style={{fontWeight:700}}>{snap.label}</div><div style={{fontSize:11,color:"#6b7280"}}>{snap.date} at {snap.time}</div></div>
                 <button style={{background:"none",color:"#6b7280",fontSize:13}} onClick={()=>setSnapshots(snapshots.filter(x=>x.id!==snap.id))}>✕</button>
               </div>
               <div style={s.kpiGrid}>
-                {[{label:"Budget Left",val:`$${snap.budgetLeft.toFixed(0)}`,color:"#10b981"},{label:"Ad Spend",val:`$${snap.totalSpend.toFixed(0)}`,color:"#f59e0b"},{label:"Revenue",val:`$${snap.totalRev.toFixed(0)}`,color:"#3b82f6"},{label:"Net Profit",val:`$${snap.netProfit.toFixed(0)}`,color:snap.netProfit>=0?"#10b981":"#ef4444"},{label:"Avg CPA",val:`$${snap.avgCPA}`,color:"#a78bfa"},{label:"ROAS",val:`${snap.ROAS}x`,color:"#f472b6"},{label:"Sales",val:snap.totalSales,color:"#34d399"},{label:"Expenses",val:`$${snap.totalExp}`,color:"#fb923c"}].map((k,i)=>(
+                {[{label:"Budget Left",val:`$${snap.budgetLeft.toFixed(0)}`,color:"#10b981"},{label:"Spend",val:`$${snap.totalSpend.toFixed(0)}`,color:"#f59e0b"},{label:"Revenue",val:`$${snap.totalRev.toFixed(0)}`,color:"#3b82f6"},{label:"Net Profit",val:`$${snap.netProfit.toFixed(0)}`,color:snap.netProfit>=0?"#10b981":"#ef4444"},{label:"Avg CPA",val:`$${snap.avgCPA}`,color:"#a78bfa"},{label:"ROAS",val:`${snap.ROAS}x`,color:"#f472b6"},{label:"Purchases",val:snap.totalPurchases,color:"#34d399"},{label:"Avg CTR",val:`${snap.avgCTR}%`,color:"#fb923c"}].map((k,i)=>(
                   <div key={i} style={{background:"#111827",borderRadius:8,padding:10}}><div style={{fontSize:10,color:"#9ca3af",marginBottom:2}}>{k.label}</div><div style={{fontSize:16,fontWeight:700,color:k.color}}>{k.val}</div></div>
                 ))}
               </div>
-              <div style={{borderTop:"1px solid #374151",paddingTop:10,marginTop:4}}>
+              <div style={{borderTop:"1px solid #374151",paddingTop:10}}>
                 <div style={{fontSize:11,color:"#9ca3af",marginBottom:6,fontWeight:600}}>Product Breakdown</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:6}}>
-                  {snap.prodStats.map(p=>(
-                    <div key={p.name} style={{background:"#111827",borderRadius:6,padding:"6px 10px",fontSize:11}}>
-                      <div style={{fontWeight:600,marginBottom:2}}>{p.name}</div>
-                      <div style={{color:"#9ca3af"}}>Spend: <span style={{color:"#f59e0b"}}>${p.spend.toFixed(0)}</span> · Sales: {p.sales} · CPA: ${p.cpa}</div>
-                    </div>
-                  ))}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:6}}>
+                  {snap.prodStats.map(p=><div key={p.name} style={{background:"#111827",borderRadius:6,padding:"6px 10px",fontSize:11}}><div style={{fontWeight:600,marginBottom:2}}>{p.name}</div><div style={{color:"#9ca3af"}}>Spend: <span style={{color:"#f59e0b"}}>${p.spend.toFixed(0)}</span> · Purchases: {p.purchases} · CPA: ${p.cpa}</div></div>)}
                 </div>
               </div>
             </div>
