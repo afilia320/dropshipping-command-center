@@ -1,1 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dropshipping Command Center</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#111827;color:#fff;font-family:system-ui,sans-serif;min-height:100vh}
+  input,select,textarea{background:#1f2937;color:#fff;border:1px solid #374151;border-radius:6px;padding:6px 10px;font-size:13px;width:100%;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:#3b82f6}
+  button{cursor:pointer;border:none;font-family:inherit}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:#1f2937}
+  ::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+  pre{font-family:inherit}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState, useEffect} = React;
 
+const FOLDER_CATS = ["Swipe File","Angles & Pain Points","Ad Copy & Scripts","Advertorials","VSL Scripts","Shopify Copy","Winner Log","General"];
+const CAT_COLORS = {"Swipe File":"#8b5cf6","Angles & Pain Points":"#f59e0b","Ad Copy & Scripts":"#3b82f6","Advertorials":"#10b981","VSL Scripts":"#f472b6","Shopify Copy":"#34d399","Winner Log":"#fbbf24","General":"#6b7280"};
+const STATUS_COLORS = {testing:"#f59e0b",winner:"#10b981",killed:"#ef4444",scaling:"#3b82f6"};
+
+const INIT_PRODUCTS = [
+  {id:1,name:"Product A",sellPrice:27,costPrice:4,shipping:4,fees:1},
+  {id:2,name:"Product B",sellPrice:27,costPrice:4,shipping:4,fees:1},
+  {id:3,name:"Product C",sellPrice:27,costPrice:4,shipping:4,fees:1},
+  {id:4,name:"Product D",sellPrice:27,costPrice:4,shipping:4,fees:1},
+];
+const INIT_EXPENSES = [
+  {id:1,label:"Shopify Monthly",amount:39,category:"tools"},
+  {id:2,label:"Domain",amount:15,category:"tools"},
+  {id:3,label:"PageFly/GemPages",amount:29,category:"tools"},
+];
+
+function load(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch { return fallback; }
+}
+function save(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
+function App() {
+  const [tab, setTab] = useState("dashboard");
+  const [products, setProducts] = useState(() => load("dsc_products", INIT_PRODUCTS));
+  const [campaigns, setCampaigns] = useState(() => load("dsc_campaigns", []));
+  const [expenses, setExpenses] = useState(() => load("dsc_expenses", INIT_EXPENSES));
+  const [snapshots, setSnapshots] = useState(() => load("dsc_snapshots", []));
+  const [notes, setNotes] = useState(() => load("dsc_notes", []));
+  const [snapLabel, setSnapLabel] = useState("");
+  const [folderFilter, setFolderFilter] = useState("All");
+  const [expandedNote, setExpandedNote] = useState(null);
+  const [editProduct, setEditProduct] = useState(null);
+  const [newCampaign, setNewCampaign] = useState({product:"Product A",day:"",spend:"",sales:"",revenue:"",status:"testing"});
+  const [newExpense, setNewExpense] = useState({label:"",amount:"",category:"tools"});
+  const [newNote, setNewNote] = useState({title:"",content:"",category:"General",product:"All"});
+
+  useEffect(() => save("dsc_products", products), [products]);
+  useEffect(() => save("dsc_campaigns", campaigns), [campaigns]);
+  useEffect(() => save("dsc_expenses", expenses), [expenses]);
+  useEffect(() => save("dsc_snapshots", snapshots), [snapshots]);
+  useEffect(() => save("dsc_notes", notes), [notes]);
+
+  const totalSpend = campaigns.reduce((s,c) => s+Number(c.spend||0), 0);
+  const totalRev = campaigns.reduce((s,c) => s+Number(c.revenue||0), 0);
+  const totalSales = campaigns.reduce((s,c) => s+Number(c.sales||0), 0);
+  const totalExp = expenses.reduce((s,e) => s+Number(e.amount||0), 0);
+  const totalCOGS = campaigns.reduce((s,c) => {
+    const p = products.find(p => p.name===c.product);
+    if(!p) return s;
+    return s + Number(c.sales||0)*(Number(p.costPrice)+Number(p.shipping)+Number(p.fees));
+  }, 0);
+  const netProfit = totalRev - totalSpend - totalCOGS - totalExp;
+  const avgCPA = totalSales>0 ? (totalSpend/totalSales).toFixed(2) : "—";
+  const ROAS = totalSpend>0 ? (totalRev/totalSpend).toFixed(2) : "—";
+  const budgetLeft = 1000 - totalSpend - totalExp;
+
+  const prodStats = products.map(p => {
+    const pc = campaigns.filter(c => c.product===p.name);
+    const spend = pc.reduce((s,c) => s+Number(c.spend||0),0);
+    const sales = pc.reduce((s,c) => s+Number(c.sales||0),0);
+    const rev = pc.reduce((s,c) => s+Number(c.revenue||0),0);
+    const cogs = sales*(Number(p.costPrice)+Number(p.shipping)+Number(p.fees));
+    const profit = rev-spend-cogs;
+    const cpa = sales>0?(spend/sales).toFixed(2):"—";
+    const margin = Number(p.sellPrice)-Number(p.costPrice)-Number(p.shipping)-Number(p.fees);
+    return {...p,spend,sales,rev,profit,cpa,margin};
+  });
+
+  const takeSnap = () => {
+    const snap = {
+      id:Date.now(), label:snapLabel.trim()||`Snapshot ${snapshots.length+1}`,
+      date:new Date().toLocaleDateString(), time:new Date().toLocaleTimeString(),
+      totalSpend,totalRev,totalSales,totalExp,netProfit,avgCPA,ROAS,budgetLeft,
+      prodStats:prodStats.map(p=>({name:p.name,spend:p.spend,sales:p.sales,rev:p.rev,profit:p.profit,cpa:p.cpa}))
+    };
+    const updated = [snap,...snapshots];
+    setSnapshots(updated);
+    setSnapLabel("");
+  };
+
+  const addCampaign = () => {
+    if(!newCampaign.day||!newCampaign.spend) return;
+    setCampaigns([...campaigns,{...newCampaign,id:Date.now()}]);
+    setNewCampaign({product:products[0]?.name||"Product A",day:"",spend:"",sales:"",revenue:"",status:"testing"});
+  };
+  const addExpense = () => {
+    if(!newExpense.label||!newExpense.amount) return;
+    setExpenses([...expenses,{...newExpense,id:Date.now(),amount:Number(newExpense.amount)}]);
+    setNewExpense({label:"",amount:"",category:"tools"});
+  };
+  const addNote = () => {
+    if(!newNote.title||!newNote.content) return;
+    setNotes([{...newNote,id:Date.now(),date:new Date().toLocaleDateString()},...notes]);
+    setNewNote({title:"",content:"",category:"General",product:"All"});
+  };
+
+  const filteredNotes = folderFilter==="All" ? notes : notes.filter(n=>n.category===folderFilter);
+
+  const s = {
+    page:{maxWidth:960,margin:"0 auto",padding:"16px"},
+    card:{background:"#1f2937",borderRadius:12,padding:16,border:"1px solid #374151",marginBottom:12},
+    btn:{background:"#2563eb",color:"#fff",padding:"6px 14px",borderRadius:6,fontSize:13,fontWeight:600},
+    btnSm:{background:"#374151",color:"#aaa",padding:"5px 10px",borderRadius:6,fontSize:12},
+    tabActive:{background:"#2563eb",color:"#fff",padding:"7px 14px",borderRadius:8,fontSize:12,fontWeight:600},
+    tabInactive:{background:"#1f2937",color:"#9ca3af",padding:"7px 14px",borderRadius:8,fontSize:12,fontWeight:500},
+    th:{color:"#9ca3af",fontSize:11,fontWeight:600,paddingBottom:8,paddingRight:12,textAlign:"left"},
+    td:{fontSize:12,paddingBottom:6,paddingRight:12,paddingTop:6,borderBottom:"1px solid #374151"},
+    label:{fontSize:11,color:"#9ca3af",marginBottom:4,display:"block"},
+    grid2:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8},
+    kpiGrid:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:10,marginBottom:12},
+  };
+
+  const TABS = ["dashboard","campaigns","products","expenses","folder","snapshots"];
+  const TAB_LABELS = {dashboard:"📊 Dashboard",campaigns:"📈 Campaigns",products:"📦 Products",expenses:"💸 Expenses",folder:"📁 Folder",snapshots:"📷 Snapshots"};
+
+  return (
+    <div style={s.page}>
+      <div style={{marginBottom:16}}>
+        <h1 style={{fontSize:20,fontWeight:700}}>🚀 Dropshipping Command Center</h1>
+        <p style={{color:"#6b7280",fontSize:12,marginTop:4}}>Starting Budget: $1,000 — Data saves automatically to this device</p>
+      </div>
+
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
+        {TABS.map(t => <button key={t} style={tab===t?s.tabActive:s.tabInactive} onClick={()=>setTab(t)}>{TAB_LABELS[t]}</button>)}
+      </div>
+
+      {/* DASHBOARD */}
+      {tab==="dashboard" && <>
+        <div style={s.kpiGrid}>
+          {[
+            {label:"Budget Left",val:`$${budgetLeft.toFixed(0)}`,color:budgetLeft<200?"#ef4444":"#10b981"},
+            {label:"Total Ad Spend",val:`$${totalSpend.toFixed(0)}`,color:"#f59e0b"},
+            {label:"Total Revenue",val:`$${totalRev.toFixed(0)}`,color:"#3b82f6"},
+            {label:"Net Profit",val:`$${netProfit.toFixed(0)}`,color:netProfit>=0?"#10b981":"#ef4444"},
+            {label:"Avg CPA",val:`$${avgCPA}`,color:"#a78bfa"},
+            {label:"ROAS",val:`${ROAS}x`,color:"#f472b6"},
+            {label:"Total Sales",val:totalSales,color:"#34d399"},
+            {label:"Expenses",val:`$${totalExp}`,color:"#fb923c"},
+          ].map((k,i) => (
+            <div key={i} style={s.card}>
+              <div style={{fontSize:11,color:"#9ca3af",marginBottom:4}}>{k.label}</div>
+              <div style={{fontSize:20,fontWeight:700,color:k.color}}>{k.val}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Budget Allocation</div>
+          {[
+            {label:"Ad Spend Reserve",allocated:600,used:totalSpend},
+            {label:"Tools & Setup",allocated:150,used:totalExp},
+            {label:"Scale Reserve",allocated:250,used:0},
+          ].map((b,i) => (
+            <div key={i} style={{marginBottom:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}>
+                <span style={{color:"#d1d5db"}}>{b.label}</span>
+                <span style={{color:"#9ca3af"}}>${b.used.toFixed(0)} / ${b.allocated}</span>
+              </div>
+              <div style={{background:"#374151",borderRadius:4,height:6}}>
+                <div style={{height:6,borderRadius:4,width:`${Math.min((b.used/b.allocated)*100,100)}%`,background:(b.used/b.allocated)>0.8?"#ef4444":"#3b82f6"}}/>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Product Signals</div>
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse"}}>
+              <thead><tr>{["Product","Spend","Sales","Revenue","CPA","BE CPA","Profit","Signal"].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
+              <tbody>
+                {prodStats.map(p => {
+                  const sig = p.cpa==="—"?"⚪ No data":Number(p.cpa)<=p.margin*0.65?"🟢 Scale":Number(p.cpa)<=p.margin?"🟡 Watch":"🔴 Kill";
+                  return <tr key={p.id}>
+                    <td style={s.td}>{p.name}</td>
+                    <td style={{...s.td,color:"#f59e0b"}}>${p.spend.toFixed(0)}</td>
+                    <td style={s.td}>{p.sales}</td>
+                    <td style={{...s.td,color:"#3b82f6"}}>${p.rev.toFixed(0)}</td>
+                    <td style={s.td}>${p.cpa}</td>
+                    <td style={{...s.td,color:"#9ca3af"}}>${p.margin.toFixed(0)}</td>
+                    <td style={{...s.td,color:p.profit>=0?"#10b981":"#ef4444"}}>${p.profit.toFixed(0)}</td>
+                    <td style={s.td}>{sig}</td>
+                  </tr>;
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:6}}>📷 Quick Snapshot</div>
+          <p style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Freeze your current numbers to compare progress over time</p>
+          <div style={{display:"flex",gap:8}}>
+            <input placeholder='Label e.g. "End of Week 1"' value={snapLabel} onChange={e=>setSnapLabel(e.target.value)} style={{flex:1}}/>
+            <button style={s.btn} onClick={takeSnap}>Save</button>
+          </div>
+        </div>
+      </>}
+
+      {/* CAMPAIGNS */}
+      {tab==="campaigns" && <>
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Log Daily Data</div>
+          <div style={s.grid2}>
+            <div><label style={s.label}>Product</label>
+              <select value={newCampaign.product} onChange={e=>setNewCampaign({...newCampaign,product:e.target.value})}>
+                {products.map(p=><option key={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div><label style={s.label}>Day/Date</label><input placeholder="Day 1" value={newCampaign.day} onChange={e=>setNewCampaign({...newCampaign,day:e.target.value})}/></div>
+            <div><label style={s.label}>Ad Spend ($)</label><input type="number" placeholder="50" value={newCampaign.spend} onChange={e=>setNewCampaign({...newCampaign,spend:e.target.value})}/></div>
+            <div><label style={s.label}>Sales (#)</label><input type="number" placeholder="3" value={newCampaign.sales} onChange={e=>setNewCampaign({...newCampaign,sales:e.target.value})}/></div>
+            <div><label style={s.label}>Revenue ($)</label><input type="number" placeholder="81" value={newCampaign.revenue} onChange={e=>setNewCampaign({...newCampaign,revenue:e.target.value})}/></div>
+            <div><label style={s.label}>Status</label>
+              <select value={newCampaign.status} onChange={e=>setNewCampaign({...newCampaign,status:e.target.value})}>
+                {["testing","winner","scaling","killed"].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+          <button style={{...s.btn,marginTop:12}} onClick={addCampaign}>+ Log Entry</button>
+        </div>
+
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Campaign Log</div>
+          {campaigns.length===0 ? <p style={{color:"#6b7280",fontSize:13}}>No entries yet.</p> : (
+            <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse"}}>
+                <thead><tr>{["Day","Product","Spend","Sales","Revenue","CPA","ROAS","Status",""].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {campaigns.map(c => {
+                    const cpa = c.sales>0?(Number(c.spend)/Number(c.sales)).toFixed(2):"—";
+                    const roas = c.spend>0?(Number(c.revenue)/Number(c.spend)).toFixed(2):"—";
+                    return <tr key={c.id}>
+                      <td style={s.td}>{c.day}</td>
+                      <td style={s.td}>{c.product}</td>
+                      <td style={{...s.td,color:"#f59e0b"}}>${c.spend}</td>
+                      <td style={s.td}>{c.sales}</td>
+                      <td style={{...s.td,color:"#3b82f6"}}>${c.revenue}</td>
+                      <td style={s.td}>${cpa}</td>
+                      <td style={s.td}>{roas}x</td>
+                      <td style={s.td}><span style={{background:STATUS_COLORS[c.status]||"#374151",color:"#fff",padding:"2px 8px",borderRadius:20,fontSize:11}}>{c.status}</span></td>
+                      <td style={s.td}><button style={{background:"none",color:"#ef4444",fontSize:13}} onClick={()=>setCampaigns(campaigns.filter(x=>x.id!==c.id))}>✕</button></td>
+                    </tr>;
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </>}
+
+      {/* PRODUCTS */}
+      {tab==="products" && products.map(p => {
+        const margin = Number(p.sellPrice)-Number(p.costPrice)-Number(p.shipping)-Number(p.fees);
+        return <div key={p.id} style={s.card}>
+          {editProduct===p.id ? (
+            <div>
+              <input style={{marginBottom:8}} value={p.name} onChange={e=>setProducts(products.map(x=>x.id===p.id?{...x,name:e.target.value}:x))}/>
+              <div style={s.grid2}>
+                {[["sellPrice","Sell Price ($)"],["costPrice","Cost ($)"],["shipping","Shipping ($)"],["fees","Fees ($)"]].map(([k,l])=>(
+                  <div key={k}><label style={s.label}>{l}</label>
+                    <input type="number" value={p[k]} onChange={e=>setProducts(products.map(x=>x.id===p.id?{...x,[k]:e.target.value}:x))}/>
+                  </div>
+                ))}
+              </div>
+              <button style={{...s.btn,marginTop:10}} onClick={()=>setEditProduct(null)}>Save</button>
+            </div>
+          ) : (
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+              <div>
+                <div style={{fontWeight:700,marginBottom:8}}>{p.name}</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"4px 24px",fontSize:12}}>
+                  {[["Sell Price",`$${p.sellPrice}`,"#fff"],["Cost",`$${p.costPrice}`,"#fff"],["Shipping",`$${p.shipping}`,"#fff"],["Fees",`$${p.fees}`,"#fff"],["True Margin",`$${margin.toFixed(2)}`,"#10b981"],["Breakeven CPA",`$${margin.toFixed(0)}`,"#f59e0b"],["Target CPA",`$${(margin*0.65).toFixed(0)}`,"#3b82f6"]].map(([l,v,c])=>(
+                    <span key={l} style={{color:"#9ca3af"}}>{l}: <span style={{color:c,fontWeight:600}}>{v}</span></span>
+                  ))}
+                </div>
+              </div>
+              <button style={s.btnSm} onClick={()=>setEditProduct(p.id)}>Edit</button>
+            </div>
+          )}
+        </div>;
+      })}
+
+      {/* EXPENSES */}
+      {tab==="expenses" && <>
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Add Expense</div>
+          <div style={s.grid2}>
+            <div><label style={s.label}>Label</label><input placeholder="Spy Tool" value={newExpense.label} onChange={e=>setNewExpense({...newExpense,label:e.target.value})}/></div>
+            <div><label style={s.label}>Amount ($)</label><input type="number" placeholder="49" value={newExpense.amount} onChange={e=>setNewExpense({...newExpense,amount:e.target.value})}/></div>
+            <div><label style={s.label}>Category</label>
+              <select value={newExpense.category} onChange={e=>setNewExpense({...newExpense,category:e.target.value})}>
+                {["tools","ads","product","creative","other"].map(c=><option key={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <button style={{...s.btn,marginTop:12}} onClick={addExpense}>+ Add</button>
+        </div>
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Expense Log</div>
+          {expenses.map(e=>(
+            <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #374151"}}>
+              <div>
+                <div style={{fontSize:13,fontWeight:500}}>{e.label}</div>
+                <div style={{fontSize:11,color:"#6b7280",textTransform:"capitalize"}}>{e.category}</div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <span style={{color:"#ef4444",fontWeight:600}}>${e.amount}</span>
+                <button style={{background:"none",color:"#6b7280",fontSize:13}} onClick={()=>setExpenses(expenses.filter(x=>x.id!==e.id))}>✕</button>
+              </div>
+            </div>
+          ))}
+          <div style={{display:"flex",justifyContent:"space-between",paddingTop:10,fontWeight:700}}>
+            <span>Total</span><span style={{color:"#ef4444"}}>${totalExp}</span>
+          </div>
+        </div>
+      </>}
+
+      {/* FOLDER */}
+      {tab==="folder" && <>
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Add Note / Reference</div>
+          <input style={{marginBottom:8}} placeholder="Title e.g. Blue Zones Hook Variations" value={newNote.title} onChange={e=>setNewNote({...newNote,title:e.target.value})}/>
+          <textarea rows={4} style={{marginBottom:8,resize:"vertical"}} placeholder="Paste your swipe, angle idea, hook, copy, notes..." value={newNote.content} onChange={e=>setNewNote({...newNote,content:e.target.value})}/>
+          <div style={s.grid2}>
+            <div><label style={s.label}>Category</label>
+              <select value={newNote.category} onChange={e=>setNewNote({...newNote,category:e.target.value})}>
+                {FOLDER_CATS.map(c=><option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div><label style={s.label}>Product</label>
+              <select value={newNote.product} onChange={e=>setNewNote({...newNote,product:e.target.value})}>
+                {["All",...products.map(p=>p.name)].map(p=><option key={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+          <button style={{...s.btn,marginTop:12}} onClick={addNote}>+ Save to Folder</button>
+        </div>
+
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+          {["All",...FOLDER_CATS].map(c=>(
+            <button key={c} style={{padding:"4px 10px",borderRadius:6,fontSize:11,fontWeight:600,background:folderFilter===c?(CAT_COLORS[c]||"#2563eb"):"#1f2937",color:folderFilter===c?"#fff":"#9ca3af"}} onClick={()=>setFolderFilter(c)}>{c}</button>
+          ))}
+        </div>
+
+        {filteredNotes.length===0 ? <div style={s.card}><p style={{color:"#6b7280",fontSize:13}}>No notes in this category yet.</p></div> :
+          filteredNotes.map(n=>(
+            <div key={n.id} style={{...s.card,cursor:"pointer"}} onClick={()=>setExpandedNote(expandedNote===n.id?null:n.id)}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:0}}>
+                  <span style={{background:CAT_COLORS[n.category]||"#374151",color:"#fff",padding:"2px 8px",borderRadius:20,fontSize:10,whiteSpace:"nowrap"}}>{n.category}</span>
+                  <span style={{fontWeight:600,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.title}</span>
+                  {n.product!=="All" && <span style={{fontSize:11,color:"#6b7280",whiteSpace:"nowrap"}}>{n.product}</span>}
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:8}}>
+                  <span style={{fontSize:11,color:"#6b7280",whiteSpace:"nowrap"}}>{n.date}</span>
+                  <button style={{background:"none",color:"#6b7280",fontSize:13}} onClick={e=>{e.stopPropagation();setNotes(notes.filter(x=>x.id!==n.id));}}>✕</button>
+                </div>
+              </div>
+              {expandedNote===n.id && (
+                <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #374151"}}>
+                  <pre style={{color:"#d1d5db",fontSize:12,whiteSpace:"pre-wrap"}}>{n.content}</pre>
+                </div>
+              )}
+            </div>
+          ))
+        }
+      </>}
+
+      {/* SNAPSHOTS */}
+      {tab==="snapshots" && <>
+        <div style={s.card}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:6}}>📷 Save Snapshot</div>
+          <p style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Freeze your numbers to compare week over week progress</p>
+          <div style={{display:"flex",gap:8}}>
+            <input placeholder='Label e.g. "End of Week 1"' value={snapLabel} onChange={e=>setSnapLabel(e.target.value)} style={{flex:1}}/>
+            <button style={s.btn} onClick={takeSnap}>Save</button>
+          </div>
+        </div>
+
+        {snapshots.length===0 ? <div style={s.card}><p style={{color:"#6b7280",fontSize:13}}>No snapshots yet.</p></div> :
+          snapshots.map(snap=>(
+            <div key={snap.id} style={s.card}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+                <div>
+                  <div style={{fontWeight:700}}>{snap.label}</div>
+                  <div style={{fontSize:11,color:"#6b7280"}}>{snap.date} at {snap.time}</div>
+                </div>
+                <button style={{background:"none",color:"#6b7280",fontSize:13}} onClick={()=>setSnapshots(snapshots.filter(x=>x.id!==snap.id))}>✕</button>
+              </div>
+              <div style={s.kpiGrid}>
+                {[
+                  {label:"Budget Left",val:`$${snap.budgetLeft.toFixed(0)}`,color:"#10b981"},
+                  {label:"Ad Spend",val:`$${snap.totalSpend.toFixed(0)}`,color:"#f59e0b"},
+                  {label:"Revenue",val:`$${snap.totalRev.toFixed(0)}`,color:"#3b82f6"},
+                  {label:"Net Profit",val:`$${snap.netProfit.toFixed(0)}`,color:snap.netProfit>=0?"#10b981":"#ef4444"},
+                  {label:"Avg CPA",val:`$${snap.avgCPA}`,color:"#a78bfa"},
+                  {label:"ROAS",val:`${snap.ROAS}x`,color:"#f472b6"},
+                  {label:"Sales",val:snap.totalSales,color:"#34d399"},
+                  {label:"Expenses",val:`$${snap.totalExp}`,color:"#fb923c"},
+                ].map((k,i)=>(
+                  <div key={i} style={{background:"#111827",borderRadius:8,padding:10}}>
+                    <div style={{fontSize:10,color:"#9ca3af",marginBottom:2}}>{k.label}</div>
+                    <div style={{fontSize:16,fontWeight:700,color:k.color}}>{k.val}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{borderTop:"1px solid #374151",paddingTop:10,marginTop:4}}>
+                <div style={{fontSize:11,color:"#9ca3af",marginBottom:6,fontWeight:600}}>Product Breakdown</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:6}}>
+                  {snap.prodStats.map(p=>(
+                    <div key={p.name} style={{background:"#111827",borderRadius:6,padding:"6px 10px",fontSize:11}}>
+                      <div style={{fontWeight:600,marginBottom:2}}>{p.name}</div>
+                      <div style={{color:"#9ca3af"}}>Spend: <span style={{color:"#f59e0b"}}>${p.spend.toFixed(0)}</span> · Sales: {p.sales} · CPA: ${p.cpa}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </>}
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById("root"));
+</script>
+</body>
+</html>
